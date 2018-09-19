@@ -58,25 +58,25 @@ contract MultiSig2of3 {
    * @dev The contract nonce is not accessible to the contract so we
    * implement a nonce-like variable for replay protection.
    */
-  uint256 public spendNonce = 0;
+  mapping(address => uint256) public spendNonce;
 
   /**
    * Contract Versioning
    */
-  uint256 public unchainedMultisigVersionMajor = 2;
+  string public unchainedMultisigVersion = "2.0";
 
   /**
    * An event sent when funds are received.
    */
-  event Funded(uint newBalance);
+  event Funded(uint256 newBalance);
 
   /**
    * An event sent when a spend is triggered to the given address.
    */
-  event Spent(address to, uint transfer);
+  event Spent(address to, uint256 transfer);
 
   /**
-   * Instantiate a new Multisig 2 of 3 contract owned by the
+   * @dev Instantiate a new Multisig 2 of 3 contract owned by the
    * three given addresses
    */
   constructor(address owner1, address owner2, address owner3) public {
@@ -114,7 +114,7 @@ contract MultiSig2of3 {
     require(destination != address(0));
     require(value != 0);
     
-    bytes32 message = keccak256(abi.encodePacked(spendNonce,
+    bytes32 message = keccak256(abi.encodePacked(spendNonce[destination],
                                                  this,
                                                  value,
                                                  destination));
@@ -137,7 +137,7 @@ contract MultiSig2of3 {
     public
   {
     /**
-     * This require is handled by generateMessageToSign()
+     * @dev This require is handled by generateMessageToSign()
      * require(destination != address(this));
      */
     require(address(this).balance >= value, "3");
@@ -146,13 +146,13 @@ contract MultiSig2of3 {
                             v1, r1, s1,
                             v2, r2, s2),
             "4");
-    spendNonce = spendNonce.add(1);
+    spendNonce[destination] = spendNonce[destination].add(1);
     destination.transfer(value);
     emit Spent(destination, value);
   }
 
   /**
-   * Confirm that the two signature triplets (v1, r1, s1) and (v2, r2, s2)
+   * @dev Confirm that the two signature triplets (v1, r1, s1) and (v2, r2, s2)
    * both authorize a spend of this contract's funds to the given
    * destination address.
    */
