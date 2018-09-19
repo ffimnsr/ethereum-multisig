@@ -57,6 +57,7 @@ contract MultiSig2of3 {
   /**
    * @dev The contract nonce is not accessible to the contract so we
    * implement a nonce-like variable for replay protection.
+   * Leave initialization to default value 0 as zero-state.
    */
   mapping(address => uint256) public spendNonce;
 
